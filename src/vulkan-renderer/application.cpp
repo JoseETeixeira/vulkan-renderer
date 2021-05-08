@@ -592,6 +592,12 @@ void Application::run() {
         update_imgui_overlay();
         render_frame();
         process_mouse_input();
+        if (m_input_data->was_key_pressed_once(GLFW_KEY_N)) {
+            load_octree_geometry();
+            generate_octree_indices();
+            m_index_buffer->upload_data(m_octree_indices);
+            m_vertex_buffer->upload_data(m_octree_vertices);
+        }
         m_camera->update(m_time_passed);
         m_time_passed = m_stopwatch.time_step();
         check_octree_collisions();
