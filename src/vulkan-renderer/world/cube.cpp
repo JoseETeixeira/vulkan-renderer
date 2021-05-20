@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <random>
 #include <utility>
 
 void swap(inexor::vulkan_renderer::world::Cube &lhs, inexor::vulkan_renderer::world::Cube &rhs) noexcept {
@@ -426,4 +427,43 @@ std::vector<PolygonCache> Cube::polygons(const bool update_invalid) const {
     collect(*this);
     return polygons;
 }
+
+std::shared_ptr<Cube> create_random_world(int max_depth, unsigned int seed) {
+    static std::random_device rd;
+    static std::mt19937 mt(seed);
+    static std::uniform_int_distribution<int> indent(0, 44);
+    static std::uniform_int_distribution<int> cube_type(0, 100);
+
+    std::shared_ptr<Cube> cube = std::make_shared<Cube>(4.0f, glm::vec3{0, -2, -2});
+    cube->set_type(Cube::Type::OCTANT);
+    std::function<void(const Cube &, int)> populate_cube;
+    populate_cube = [&](const Cube &parent, int depth) {
+        for (const auto &child : parent.children()) {
+            if (depth != max_depth) {
+                child->set_type(Cube::Type::OCTANT);
+                populate_cube(*child, depth + 1);
+                continue;
+            }
+            auto ty = cube_type(mt);
+            if (ty < 30) {
+                child->set_type(Cube::Type::EMPTY);
+                continue;
+            }
+            if (ty < 60) {
+                child->set_type(Cube::Type::SOLID);
+                continue;
+            }
+            if (ty < 100) {
+                child->set_type(Cube::Type::NORMAL);
+                for (int i = 0; i < 12; i++) {
+                    child->set_indent(i, Indentation(indent(mt)));
+                }
+                continue;
+            }
+        }
+    };
+    populate_cube(*cube, 0);
+    return cube;
+}
+
 } // namespace inexor::vulkan_renderer::world

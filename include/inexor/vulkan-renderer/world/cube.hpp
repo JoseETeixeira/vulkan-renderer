@@ -145,4 +145,6 @@ public:
     [[nodiscard]] std::vector<PolygonCache> polygons(bool update_invalid = false) const;
 };
 
+std::shared_ptr<world::Cube> create_random_world(int max_depth, unsigned int seed = 42);
+
 } // namespace inexor::vulkan_renderer::world
