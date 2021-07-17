@@ -48,6 +48,7 @@ set(INEXOR_SOURCE_FILES
 
     vulkan-renderer/world/collision.cpp
     vulkan-renderer/world/collision_query.cpp
+    vulkan-renderer/world/collision_solver.cpp
     vulkan-renderer/world/cube.cpp
     vulkan-renderer/world/indentation.cpp)
 
