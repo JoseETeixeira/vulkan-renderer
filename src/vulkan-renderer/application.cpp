@@ -184,7 +184,7 @@ void Application::load_octree_geometry() {
     m_worlds.emplace_back(std::make_shared<world::Cube>(1.0f, glm::vec3{0, 0, 0}));
     m_worlds.emplace_back(std::make_shared<world::Cube>(1.6f, glm::vec3{0, 10, 0}));
 
-    m_collision_solver = std::make_unique<world::OctreeCollisionSolver>(m_worlds.size());
+    m_collision_solver = std::make_unique<world::OctreeCollisionSolver>();
 
     m_worlds[0]->set_type(world::Cube::Type::OCTANT);
     m_worlds[1]->set_type(world::Cube::Type::SOLID);
