@@ -42,6 +42,7 @@ class Application : public VulkanRenderer {
     void load_toml_configuration_file(const std::string &file_name);
     void load_textures();
     void load_shaders();
+    void load_gltf_example_model();
     void load_octree_geometry();
     void setup_vulkan_debug_callback();
     void setup_window_and_input_callbacks();
