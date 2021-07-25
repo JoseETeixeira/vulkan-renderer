@@ -624,8 +624,7 @@ SwapchainSettings VulkanSettingsDecisionMaker::decide_swapchain_extent(VkPhysica
         throw VulkanException("Error: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!", result);
     }
 
-    if (surface_capabilities.currentExtent.width == std::numeric_limits<std::uint32_t>::max() &&
-        surface_capabilities.currentExtent.height == std::numeric_limits<std::uint32_t>::max()) {
+    if (surface_capabilities.currentExtent.width == 0xFFFFFFFF) {
         // The size of the window dictates the extent of the swapchain.
         updated_swapchain_settings.swapchain_size.width = window_width;
         updated_swapchain_settings.swapchain_size.height = window_height;
