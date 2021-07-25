@@ -626,8 +626,10 @@ SwapchainSettings VulkanSettingsDecisionMaker::decide_swapchain_extent(VkPhysica
 
     if (surface_capabilities.currentExtent.width == 0xFFFFFFFF) {
         // The size of the window dictates the extent of the swapchain.
-        updated_swapchain_settings.swapchain_size.width = window_width;
-        updated_swapchain_settings.swapchain_size.height = window_height;
+        updated_swapchain_settings.swapchain_size.width = std::clamp(
+            window_width, surface_capabilities.minImageExtent.width, surface_capabilities.maxImageExtent.width);
+        updated_swapchain_settings.swapchain_size.height = std::clamp(
+            window_width, surface_capabilities.minImageExtent.height, surface_capabilities.maxImageExtent.height);
     } else {
         // If the surface size is defined, the swap chain size must match.
         updated_swapchain_settings.swapchain_size = surface_capabilities.currentExtent;
