@@ -1,5 +1,7 @@
 #pragma once
 
+#include "inexor/vulkan-renderer/settings_decision_maker.hpp"
+
 #include <vulkan/vulkan_core.h>
 
 #include <stdexcept>
@@ -13,11 +15,12 @@ class Semaphore;
 
 /// @brief RAII wrapper class for VkSwapchainKHR.
 class Swapchain {
+
     const wrapper::Device &m_device;
     VkSurfaceKHR m_surface{VK_NULL_HANDLE};
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
     VkSurfaceFormatKHR m_surface_format{};
-    VkExtent2D m_extent{};
+    SwapchainSettings m_swapchain_settings;
 
     std::vector<VkImage> m_swapchain_images;
     std::vector<VkImageView> m_swapchain_image_views;
@@ -56,24 +59,24 @@ public:
     /// @param window_height The height of the window.
     void recreate(std::uint32_t window_width, std::uint32_t window_height);
 
-    [[nodiscard]] const VkSwapchainKHR *swapchain_ptr() const {
+    [[nodiscard]] const VkSwapchainKHR *swapchain_ptr() const noexcept {
         return &m_swapchain;
     }
 
-    [[nodiscard]] VkSwapchainKHR swapchain() const {
+    [[nodiscard]] VkSwapchainKHR swapchain() const noexcept {
         return m_swapchain;
     }
 
-    [[nodiscard]] std::uint32_t image_count() const {
+    [[nodiscard]] std::uint32_t image_count() const noexcept {
         return m_swapchain_image_count;
     }
 
-    [[nodiscard]] VkFormat image_format() const {
+    [[nodiscard]] VkFormat image_format() const noexcept {
         return m_surface_format.format;
     }
 
-    [[nodiscard]] VkExtent2D extent() const {
-        return m_extent;
+    [[nodiscard]] VkExtent2D extent() const noexcept {
+        return m_swapchain_settings.swapchain_size;
     }
 
     [[nodiscard]] VkImageView image_view(std::size_t index) const {
@@ -86,7 +89,7 @@ public:
         return m_swapchain_image_views.at(index);
     }
 
-    [[nodiscard]] std::vector<VkImageView> image_views() const {
+    [[nodiscard]] std::vector<VkImageView> image_views() const noexcept {
         return m_swapchain_image_views;
     }
 };

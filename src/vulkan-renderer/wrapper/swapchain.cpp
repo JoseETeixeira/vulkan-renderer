@@ -1,7 +1,6 @@
 #include "inexor/vulkan-renderer/wrapper/swapchain.hpp"
 
 #include "inexor/vulkan-renderer/exception.hpp"
-#include "inexor/vulkan-renderer/settings_decision_maker.hpp"
 #include "inexor/vulkan-renderer/wrapper/device.hpp"
 #include "inexor/vulkan-renderer/wrapper/make_info.hpp"
 #include "inexor/vulkan-renderer/wrapper/semaphore.hpp"
@@ -14,8 +13,8 @@
 
 namespace inexor::vulkan_renderer::wrapper {
 
-Swapchain::Swapchain(const Device &device, const VkSurfaceKHR surface, std::uint32_t window_width,
-                     std::uint32_t window_height, const bool enable_vsync, std::string name)
+Swapchain::Swapchain(const Device &device, const VkSurfaceKHR surface, const std::uint32_t window_width,
+                     const std::uint32_t window_height, const bool enable_vsync, std::string name)
     : m_device(device), m_surface(surface), m_vsync_enabled(enable_vsync), m_name(std::move(name)) {
     assert(device.device());
     assert(surface);
@@ -27,7 +26,7 @@ Swapchain::Swapchain(Swapchain &&other) noexcept : m_device(other.m_device) {
     m_surface = std::exchange(other.m_surface, nullptr);
     m_swapchain = std::exchange(other.m_swapchain, nullptr);
     m_surface_format = other.m_surface_format;
-    m_extent = other.m_extent;
+    m_swapchain_settings = other.m_swapchain_settings;
     m_swapchain_images = std::move(other.m_swapchain_images);
     m_swapchain_image_views = std::move(other.m_swapchain_image_views);
     m_swapchain_image_count = other.m_swapchain_image_count;
@@ -35,13 +34,8 @@ Swapchain::Swapchain(Swapchain &&other) noexcept : m_device(other.m_device) {
     m_name = std::move(other.m_name);
 }
 
-void Swapchain::setup_swapchain(const VkSwapchainKHR old_swapchain, std::uint32_t window_width,
-                                std::uint32_t window_height) {
-    auto swapchain_settings = VulkanSettingsDecisionMaker::decide_swapchain_extent(
-        m_device.physical_device(), m_surface, window_width, window_height);
-
-    m_extent = swapchain_settings.swapchain_size;
-
+void Swapchain::setup_swapchain(VkSwapchainKHR old_swapchain, const std::uint32_t window_width,
+                                const std::uint32_t window_height) {
     std::optional<VkPresentModeKHR> present_mode = VulkanSettingsDecisionMaker::decide_which_presentation_mode_to_use(
         m_device.physical_device(), m_surface, m_vsync_enabled);
 
@@ -61,21 +55,23 @@ void Swapchain::setup_swapchain(const VkSwapchainKHR old_swapchain, std::uint32_
 
     m_surface_format = *surface_format_candidate;
 
-
     VkSurfaceCapabilitiesKHR surface_caps{};
 
-    if (const auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.physical_device(), m_surface, &surface_caps);
+    if (const auto result =
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.physical_device(), m_surface, &surface_caps);
         result != VK_SUCCESS) {
         throw VulkanException("Error: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!", result);
     }
+
+    m_swapchain_settings = VulkanSettingsDecisionMaker::decide_swapchain_extent(m_device.physical_device(), m_surface,
+                                                                                window_width, window_height);
 
     auto swapchain_ci = make_info<VkSwapchainCreateInfoKHR>();
     swapchain_ci.surface = m_surface;
     swapchain_ci.minImageCount = m_swapchain_image_count;
     swapchain_ci.imageFormat = m_surface_format.format;
     swapchain_ci.imageColorSpace = m_surface_format.colorSpace;
-    swapchain_ci.imageExtent.width = std::clamp(m_extent.width, surface_caps.minImageExtent.width, surface_caps.maxImageExtent.width);
-    swapchain_ci.imageExtent.height = std::clamp(m_extent.height, surface_caps.minImageExtent.height, surface_caps.maxImageExtent.width);
+    swapchain_ci.imageExtent = m_swapchain_settings.swapchain_size;
     swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapchain_ci.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(
         VulkanSettingsDecisionMaker::decide_which_image_transformation_to_use(m_device.physical_device(), m_surface));

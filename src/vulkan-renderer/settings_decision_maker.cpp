@@ -611,38 +611,35 @@ VulkanSettingsDecisionMaker::decide_which_presentation_mode_to_use(VkPhysicalDev
 }
 
 SwapchainSettings VulkanSettingsDecisionMaker::decide_swapchain_extent(VkPhysicalDevice graphics_card,
-                                                                       VkSurfaceKHR surface, std::uint32_t window_width,
-                                                                       std::uint32_t window_height) {
+                                                                       VkSurfaceKHR surface,
+                                                                       const std::uint32_t window_width,
+                                                                       const std::uint32_t window_height) {
     assert(graphics_card);
     assert(surface);
 
     VkSurfaceCapabilitiesKHR surface_capabilities{};
-    SwapchainSettings updated_swapchain_settings{};
+    SwapchainSettings settings{};
 
     if (const auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(graphics_card, surface, &surface_capabilities);
         result != VK_SUCCESS) {
         throw VulkanException("Error: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!", result);
     }
 
-    if (surface_capabilities.currentExtent.width == 0xFFFFFFFF) {
+    // If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain.
+    if (surface_capabilities.currentExtent.width == std::numeric_limits<std::uint32_t>::max() ||
+        surface_capabilities.currentExtent.height == std::numeric_limits<std::uint32_t>::max()) {
         // The size of the window dictates the extent of the swapchain.
-        updated_swapchain_settings.swapchain_size.width = std::clamp(
-            window_width, surface_capabilities.minImageExtent.width, surface_capabilities.maxImageExtent.width);
-        updated_swapchain_settings.swapchain_size.height = std::clamp(
-            window_width, surface_capabilities.minImageExtent.height, surface_capabilities.maxImageExtent.height);
+        settings.swapchain_size.width = window_width;
+        settings.swapchain_size.height = window_height;
+        settings.window_size.width = window_width;
+        settings.window_size.height = window_height;
     } else {
-        // If the surface size is defined, the swap chain size must match.
-        updated_swapchain_settings.swapchain_size.width =
-            std::clamp(surface_capabilities.currentExtent.width, surface_capabilities.minImageExtent.width,
-                       surface_capabilities.maxImageExtent.width);
-        updated_swapchain_settings.swapchain_size.height =
-            std::clamp(surface_capabilities.currentExtent.height, surface_capabilities.minImageExtent.height,
-                       surface_capabilities.maxImageExtent.height);
-
-        updated_swapchain_settings.window_size = updated_swapchain_settings.swapchain_size;
+        // If the surface size is defined, the swapchain size must match.
+        settings.swapchain_size = surface_capabilities.currentExtent;
+        settings.window_size = surface_capabilities.currentExtent;
     }
 
-    return updated_swapchain_settings;
+    return settings;
 }
 
 std::optional<std::uint32_t> VulkanSettingsDecisionMaker::find_graphics_queue_family(VkPhysicalDevice graphics_card) {
