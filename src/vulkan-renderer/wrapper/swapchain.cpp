@@ -61,13 +61,21 @@ void Swapchain::setup_swapchain(const VkSwapchainKHR old_swapchain, std::uint32_
 
     m_surface_format = *surface_format_candidate;
 
+
+    VkSurfaceCapabilitiesKHR surface_caps{};
+
+    if (const auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.physical_device(), m_surface, &surface_caps);
+        result != VK_SUCCESS) {
+        throw VulkanException("Error: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed!", result);
+    }
+
     auto swapchain_ci = make_info<VkSwapchainCreateInfoKHR>();
     swapchain_ci.surface = m_surface;
     swapchain_ci.minImageCount = m_swapchain_image_count;
     swapchain_ci.imageFormat = m_surface_format.format;
     swapchain_ci.imageColorSpace = m_surface_format.colorSpace;
-    swapchain_ci.imageExtent.width = m_extent.width;
-    swapchain_ci.imageExtent.height = m_extent.height;
+    swapchain_ci.imageExtent.width = std::clamp(m_extent.width, surface_caps.minImageExtent.width, surface_caps.maxImageExtent.width);
+    swapchain_ci.imageExtent.height = std::clamp(m_extent.height, surface_caps.minImageExtent.height, surface_caps.maxImageExtent.width);
     swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapchain_ci.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(
         VulkanSettingsDecisionMaker::decide_which_image_transformation_to_use(m_device.physical_device(), m_surface));
