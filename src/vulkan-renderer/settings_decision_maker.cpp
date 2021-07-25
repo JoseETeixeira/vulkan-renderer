@@ -632,8 +632,14 @@ SwapchainSettings VulkanSettingsDecisionMaker::decide_swapchain_extent(VkPhysica
             window_width, surface_capabilities.minImageExtent.height, surface_capabilities.maxImageExtent.height);
     } else {
         // If the surface size is defined, the swap chain size must match.
-        updated_swapchain_settings.swapchain_size = surface_capabilities.currentExtent;
-        updated_swapchain_settings.window_size = surface_capabilities.currentExtent;
+        updated_swapchain_settings.swapchain_size.width =
+            std::clamp(surface_capabilities.currentExtent.width, surface_capabilities.minImageExtent.width,
+                       surface_capabilities.maxImageExtent.width);
+        updated_swapchain_settings.swapchain_size.height =
+            std::clamp(surface_capabilities.currentExtent.height, surface_capabilities.minImageExtent.height,
+                       surface_capabilities.maxImageExtent.height);
+
+        updated_swapchain_settings.window_size = updated_swapchain_settings.swapchain_size;
     }
 
     return updated_swapchain_settings;
