@@ -160,13 +160,6 @@ void Swapchain::setup_swapchain(const VkSwapchainKHR old_swapchain, std::uint32_
     spdlog::debug("Created {} swapchain image views successfully.", m_swapchain_image_count);
 }
 
-std::uint32_t Swapchain::acquire_next_image(const Semaphore &semaphore) {
-    std::uint32_t image_index = 0;
-    vkAcquireNextImageKHR(m_device.device(), m_swapchain, std::numeric_limits<std::uint64_t>::max(), semaphore.get(),
-                          VK_NULL_HANDLE, &image_index);
-    return image_index;
-}
-
 void Swapchain::recreate(std::uint32_t window_width, std::uint32_t window_height) {
     // Store the old swapchain. This allows us to pass it to VkSwapchainCreateInfoKHR::oldSwapchain to speed up
     // swapchain recreation.

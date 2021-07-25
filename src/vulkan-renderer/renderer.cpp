@@ -103,7 +103,19 @@ void VulkanRenderer::render_frame() {
         return;
     }
 
-    const auto image_index = m_swapchain->acquire_next_image(*m_image_available_semaphore);
+    std::uint32_t image_index = 0;
+
+    // By setting timeout to std::numeric_limits<std::uint64_t>::max() we will always wait until the next image has been
+    // acquired or an actual error is thrown With that we don't have to handle VK_NOT_READY.
+    const auto result =
+        vkAcquireNextImageKHR(m_device->device(), m_swapchain->swapchain(), std::numeric_limits<std::uint64_t>::max(),
+                              m_image_available_semaphore->get(), VK_NULL_HANDLE, &image_index);
+
+    if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreate_swapchain();
+        return;
+    }
+
     m_render_graph->render(static_cast<int>(image_index), m_rendering_finished_semaphore->get(),
                            m_image_available_semaphore->get(), m_device->graphics_queue());
 
