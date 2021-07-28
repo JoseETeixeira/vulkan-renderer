@@ -38,10 +38,11 @@ void VulkanRenderer::setup_render_graph() {
     main_stage->bind_buffer(m_vertex_buffer, 0);
     main_stage->set_clears_screen(true);
     main_stage->set_depth_options(true, true);
+    /*
     main_stage->set_on_record([&](const PhysicalStage &physical, const wrapper::CommandBuffer &cmd_buf) {
         cmd_buf.bind_descriptor(m_descriptors[0], physical.pipeline_layout());
         cmd_buf.draw_indexed(m_octree_indices.size());
-    });
+    });*/
 
     for (const auto &shader : m_shaders) {
         main_stage->uses_shader(shader);
